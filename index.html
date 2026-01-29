@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thử Thách Giác Quan HEX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .color-box {
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Animation cho kết quả */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
+        <!-- Header -->
+        <header class="text-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Thử Thách Giác Quan HEX</h1>
+            <p class="text-sm text-gray-500 mt-1">Nhìn màu sắc - Đoán mã số</p>
+        </header>
+
+        <!-- Khu vực hiển thị màu đề bài -->
+        <div class="relative group cursor-help mb-8">
+            <div id="targetColorBox" class="color-box w-full h-48 rounded-xl bg-gray-200 border-4 border-white flex items-center justify-center">
+                <span class="text-white/50 text-4xl font-bold opacity-0 group-hover:opacity-20 transition-opacity">?</span>
+            </div>
+            <p class="text-center text-xs text-gray-400 mt-2">Màu cần đoán</p>
+        </div>
+
+        <!-- Form nhập liệu -->
+        <div id="inputSection" class="space-y-4">
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <label for="hexInput" class="block text-sm font-medium text-gray-700">Dự đoán của bạn (#RRGGBB)</label>
+                    
+                    <!-- Toggle Switch -->
+                    <label class="inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" id="previewToggle" class="sr-only peer" checked>
+                        <div class="relative w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                        <span class="ms-2 text-xs text-gray-600 font-medium">Xem trước màu</span>
+                    </label>
+                </div>
+
+                <div class="relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-lg">#</span>
+                    </div>
+                    <input type="text" id="hexInput" 
+                        class="block w-full pl-8 pr-12 py-3 border border-gray-300 rounded-lg text-lg uppercase tracking-widest placeholder-gray-300" 
+                        placeholder="FF0000" maxlength="6">
+                    <!-- Preview màu người dùng nhập -->
+                    <div id="previewDotWrapper" class="absolute inset-y-0 right-0 pr-3 flex items-center transition-opacity duration-300">
+                        <div id="previewDot" class="h-6 w-6 rounded-full border border-gray-200 bg-transparent transition-colors duration-200"></div>
+                    </div>
+                </div>
+                <p id="errorMsg" class="text-red-500 text-xs mt-1 hidden">Vui lòng nhập đúng 6 ký tự HEX (0-9, A-F)</p>
+            </div>
+
+            <button id="guessBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 transform active:scale-95">
+                Kiểm tra kết quả
+            </button>
+        </div>
+
+        <!-- Khu vực kết quả (Ẩn mặc định) -->
+        <div id="resultSection" class="hidden mt-6 border-t pt-6 fade-in">
+            <div class="flex justify-between items-center mb-4">
+                <div class="text-center w-1/2 pr-2">
+                    <div id="resultTargetBox" class="h-16 w-full rounded-lg mb-2 shadow-inner"></div>
+                    <p class="text-xs text-gray-500">Màu gốc</p>
+                    <p id="targetHexText" class="font-mono font-bold text-gray-800"></p>
+                </div>
+                <div class="text-center w-1/2 pl-2">
+                    <div id="resultUserBox" class="h-16 w-full rounded-lg mb-2 shadow-inner"></div>
+                    <p class="text-xs text-gray-500">Bạn đoán</p>
+                    <p id="userHexText" class="font-mono font-bold text-gray-800"></p>
+                </div>
+            </div>
+
+            <div class="text-center bg-gray-50 rounded-xl p-4">
+                <p class="text-gray-500 text-sm mb-1">Độ chính xác</p>
+                <div class="text-4xl font-bold text-indigo-600 mb-2">
+                    <span id="scoreText">0</span>%
+                </div>
+                <p id="feedbackText" class="text-sm font-medium"></p>
+            </div>
+
+            <button id="restartBtn" class="mt-4 w-full bg-white border border-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg hover:bg-gray-50 transition duration-200">
+                Chơi màn tiếp theo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // --- Cấu hình & Biến toàn cục ---
+        let currentTargetHex = '';
+        const maxDistance = Math.sqrt(Math.pow(255, 2) * 3); // ~441.67
+
+        // --- DOM Elements ---
+        const targetBox = document.getElementById('targetColorBox');
+        const hexInput = document.getElementById('hexInput');
+        const previewDotWrapper = document.getElementById('previewDotWrapper');
+        const previewDot = document.getElementById('previewDot');
+        const previewToggle = document.getElementById('previewToggle');
+        const guessBtn = document.getElementById('guessBtn');
+        const errorMsg = document.getElementById('errorMsg');
+        const inputSection = document.getElementById('inputSection');
+        const resultSection = document.getElementById('resultSection');
+        
+        // Result Elements
+        const resultTargetBox = document.getElementById('resultTargetBox');
+        const resultUserBox = document.getElementById('resultUserBox');
+        const targetHexText = document.getElementById('targetHexText');
+        const userHexText = document.getElementById('userHexText');
+        const scoreText = document.getElementById('scoreText');
+        const feedbackText = document.getElementById('feedbackText');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // --- Hàm tiện ích ---
+
+        // Tạo mã HEX ngẫu nhiên
+        function generateRandomHex() {
+            let hex = Math.floor(Math.random() * 16777215).toString(16).toUpperCase();
+            return hex.padStart(6, '0');
+        }
+
+        // Chuyển HEX sang RGB Object
+        function hexToRgb(hex) {
+            // Loại bỏ dấu # nếu có
+            hex = hex.replace(/^#/, '');
+            
+            // Xử lý shorthand (vd: F00 -> FF0000)
+            if (hex.length === 3) {
+                hex = hex.split('').map(char => char + char).join('');
+            }
+
+            const bigint = parseInt(hex, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+
+            return { r, g, b };
+        }
+
+        // --- Logic Game ---
+
+        function initGame() {
+            currentTargetHex = generateRandomHex();
+            targetBox.style.backgroundColor = '#' + currentTargetHex;
+            
+            // Reset UI
+            hexInput.value = '';
+            previewDot.style.backgroundColor = 'transparent';
+            errorMsg.classList.add('hidden');
+            inputSection.classList.remove('hidden');
+            resultSection.classList.add('hidden');
+            hexInput.focus();
+            
+            // Re-apply preview logic based on toggle state
+            handleInput();
+        }
+
+        function handleInput() {
+            let val = hexInput.value.toUpperCase().replace(/[^0-9A-F]/g, '');
+            // Giới hạn 6 ký tự
+            if (val.length > 6) val = val.slice(0, 6);
+            hexInput.value = val;
+
+            const isPreviewEnabled = previewToggle.checked;
+            const isValidHex = (val.length === 3 || val.length === 6);
+
+            // Update preview dot logic
+            if (isPreviewEnabled && isValidHex) {
+                previewDot.style.backgroundColor = '#' + val;
+                previewDotWrapper.style.opacity = '1';
+                errorMsg.classList.add('hidden');
+            } else {
+                previewDot.style.backgroundColor = 'transparent';
+                // Nếu tắt preview thì ẩn luôn wrapper cho gọn, hoặc để transparent
+                // Ở đây ta giữ wrapper nhưng màu trong suốt để không bị nhảy layout
+                if (!isPreviewEnabled) {
+                    previewDotWrapper.style.opacity = '0.2'; // Làm mờ đi để báo hiệu đang tắt
+                } else {
+                    previewDotWrapper.style.opacity = '1';
+                }
+            }
+        }
+
+        function calculateScore() {
+            const userHex = hexInput.value;
+            
+            // Validate cơ bản
+            if (userHex.length !== 6) {
+                errorMsg.classList.remove('hidden');
+                return;
+            }
+
+            const targetRGB = hexToRgb(currentTargetHex);
+            const userRGB = hexToRgb(userHex);
+
+            // Công thức khoảng cách Euclid
+            const distance = Math.sqrt(
+                Math.pow(userRGB.r - targetRGB.r, 2) +
+                Math.pow(userRGB.g - targetRGB.g, 2) +
+                Math.pow(userRGB.b - targetRGB.b, 2)
+            );
+
+            // Tính phần trăm
+            let percentage = ((maxDistance - distance) / maxDistance) * 100;
+            // Đảm bảo không âm
+            percentage = Math.max(0, percentage);
+            
+            showResult(userHex, percentage);
+        }
+
+        function showResult(userHex, percentage) {
+            inputSection.classList.add('hidden');
+            resultSection.classList.remove('hidden');
+
+            // Set màu hiển thị
+            resultTargetBox.style.backgroundColor = '#' + currentTargetHex;
+            resultUserBox.style.backgroundColor = '#' + userHex;
+
+            // Set text
+            targetHexText.textContent = '#' + currentTargetHex;
+            userHexText.textContent = '#' + userHex;
+
+            // Animation số điểm chạy
+            animateValue(scoreText, 0, percentage, 1000);
+
+            // Feedback
+            let feedback = "";
+            if (percentage >= 98) feedback = "Thần thánh! Mắt bạn là máy quét màu à? 🦅";
+            else if (percentage >= 95) feedback = "Xuất sắc! Sai số cực nhỏ 👏";
+            else if (percentage >= 90) feedback = "Rất tốt! Cảm nhận màu tuyệt vời 👍";
+            else if (percentage >= 80) feedback = "Khá lắm! Bạn nắm bắt được tông màu chính 👌";
+            else if (percentage >= 70) feedback = "Tạm ổn. Cần luyện tập thêm độ đậm nhạt 🤔";
+            else feedback = "Đừng nản! Hãy chú ý các cặp màu RGB kỹ hơn 😅";
+            
+            feedbackText.textContent = feedback;
+            
+            // Đổi màu điểm số
+            if (percentage >= 90) scoreText.className = "text-4xl font-bold text-green-600 mb-2";
+            else if (percentage >= 70) scoreText.className = "text-4xl font-bold text-yellow-600 mb-2";
+            else scoreText.className = "text-4xl font-bold text-red-600 mb-2";
+        }
+
+        function animateValue(obj, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = (progress * (end - start) + start).toFixed(2);
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // --- Event Listeners ---
+        hexInput.addEventListener('input', handleInput);
+        
+        // Listener cho Toggle Switch
+        previewToggle.addEventListener('change', handleInput);
+
+        guessBtn.addEventListener('click', calculateScore);
+        
+        hexInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                calculateScore();
+            }
+        });
+
+        restartBtn.addEventListener('click', initGame);
+
+        // Khởi động game
+        initGame();
+
+    </script>
+</body>
+</html>
